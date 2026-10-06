@@ -45,7 +45,7 @@ if st.button("Aaj ka Signal Lo 🔥"):
 
             with st.spinner("AI soch raha hai..."):
                 response = client.models.generate_content(
-                    model="gemini-1.5-flash",
+                    model="gemini-3-flash-preview",
                     contents=prompt
                 )
             st.markdown("### 🤖 AI Signal:")
