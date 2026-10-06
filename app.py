@@ -1,50 +1,55 @@
-
-            
-    
 import streamlit as st
 import yfinance as yf
 from google import genai
 
-st.set_page_config(page_title="Daily Stock Signal AI")
-st.title("📈 Daily Stock Signal AI")
+st.set_page_config(page_title="Daily Signal AI", page_icon="📈")
+st.title("📈 Daily Signal AI - BTC / Gold / Oil")
 
-symbol = st.text_input("Stock Symbol:", "BTC-USD").strip().upper()
-if not symbol:
-    symbol = "BTC-USD"
+st.markdown("Symbol likho aur signal lo:")
+symbol_input = st.text_input("Symbol:", "BTC-USD").strip().upper()
 
-# BTC ko BTC-USD me auto convert
-if symbol == "BTC":
+# Auto convert
+if symbol_input == "BTC":
     symbol = "BTC-USD"
-if symbol == "GOLD":
+elif symbol_input == "GOLD":
     symbol = "GC=F"
-if symbol == "OIL":
+elif symbol_input == "OIL":
     symbol = "CL=F"
+else:
+    symbol = symbol_input
 
-if st.button("Aaj ka Signal Lo"):
+st.info(f"Aap dekh rahe ho: **{symbol}** | Gold=GC=F, Oil=CL=F, BTC=BTC-USD")
+
+if st.button("Aaj ka Signal Lo 🔥"):
     try:
-        # API Key
-        GEMINI_KEY = st.secrets["GEMINI_KEY"]
-        client = genai.Client(api_key=GEMINI_KEY)
+        key = st.secrets["GEMINI_KEY"]
+        client = genai.Client(api_key=key)
         
-        # Stock data
-        st.write(f"Data la raha hu {symbol} ka...")
-        data = yf.Ticker(symbol).history(period="5d")
+        st.write(f"⏳ {symbol} ka data la raha hu...")
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(period="10d")
         
         if data.empty:
-            st.error(f"{symbol} ka data nahi mila. Sahi symbol likho jaise BTC-USD, GC=F, RELIANCE.NS")
+            st.error("Data nahi mila! Sahi symbol likho: BTC-USD, ETH-USD, GC=F, CL=F, AAPL")
         else:
-            last_price = data['Close'].iloc[-1]
-            st.success(f"{symbol} Price: ${last_price:.2f}")
-            
-            prompt = f"Stock {symbol} ka price {last_price} hai, last 5 din ka data {data['Close'].tolist()} hai. Is pe BUY, SELL ya HOLD ka signal do with short reason."
-            
-            resp = client.models.generate_content(
-                model="gemini-1.5-flash", 
-                contents=prompt
-            )
+            price = data['Close'].iloc[-1]
+            st.success(f"Current Price: ${price:.2f}")
+            st.line_chart(data['Close'])
+
+            prompt = f"""
+            Symbol {symbol} ka current price ${price:.2f} hai.
+            Last 10 days closing: {data['Close'].tolist()}.
+            Is par short BUY/SELL/HOLD signal do. 
+            1. Signal 2. Reason 3. Risk. Urdu/Hindi mix me jawab do.
+            """
+
+            with st.spinner("AI soch raha hai..."):
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=prompt
+                )
             st.markdown("### 🤖 AI Signal:")
-            st.write(resp.text)
-            
+            st.write(response.text)
+
     except Exception as e:
         st.error(f"Error: {e}")
-        st.info("Check karo: 1) Secrets me GEMINI_KEY sahi hai? 2) Symbol sahi hai?")
