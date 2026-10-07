@@ -4,173 +4,143 @@ from datetime import datetime
 
 st.set_page_config(page_title="TAURIC x GEMINI PRO", page_icon="🐂", layout="centered")
 
-# --- PREMIUM LIGHT THEME ---
+# ===== KEY YAHAN NAHI, STREAMLIT SECRETS ME JAYEGI =====
+GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+# =======================================================
+
+# --- PINK DESIGN - AAPKE SCREENSHOT JAISA ---
 st.markdown("""
 <style>
-    .stApp { background-color: #FFF5F8 !important; }
-    h1, h2, h3, p, label, span, div { color: #222 !important; }
-    
-    /* Dropdown Fix - Ab kala nahi hoga */
-    div[data-baseweb="select"] > div {
-        background-color: white !important;
-        color: black !important;
-        border: 1.5px solid #ff1493 !important;
-    }
-    
-    .header {
-        text-align: center;
-        padding: 20px;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 4px 15px rgba(255,20,147,0.1);
-        margin-bottom: 20px;
-    }
-    .price-card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        text-align: center;
-        border: 1px solid #ffe0ec;
-        margin-bottom: 15px;
-    }
-    .ai-card {
-        background: white;
-        padding: 18px;
-        border-radius: 16px;
-        margin: 10px 0;
-        border-left: 6px solid #ff1493;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .buy { border-left-color: #00C853 !important; }
-    .sell { border-left-color: #FF1744 !important; }
-    .hold { border-left-color: #FFC400 !important; }
-    
-    .final-buy { background: linear-gradient(135deg, #00C853, #009624); color: white !important; padding: 25px; border-radius: 20px; text-align: center; }
-    .final-sell { background: linear-gradient(135deg, #FF1744, #D50000); color: white !important; padding: 25px; border-radius: 20px; text-align: center; }
-    .final-hold { background: linear-gradient(135deg, #FF9100, #FF6D00); color: white !important; padding: 25px; border-radius: 20px; text-align: center; }
-    .final-buy *, .final-sell *, .final-hold * { color: white !important; }
+.stApp { background-color: #FFEAEC !important; }
+header { visibility: hidden; }
+h1, h2, h3, p, div, span, label { color: #0D3B3B !important; }
+.block {
+    background: #0A4D4D;
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+}
+.bull-block {
+    background: #0A4D4D;
+    width: 110px;
+    height: 110px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 58px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+    margin: 20px auto;
+}
+.agent-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 22px 10px;
+}
+.agent-row.right { justify-content: flex-end; }
+.agent-text { line-height: 1.2; }
+.agent-text b { font-size: 16px; }
+.agent-text span { font-size: 13px; color: #234F4F !important; }
+.price-card {
+    background: white;
+    padding: 15px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 15px 0;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR ---
-with st.sidebar:
-    st.title("🔑 Tauric Settings")
-    api_key = st.text_input("Gemini API Key (AQ wali):", type="password", placeholder="AQAb8... paste karo").strip()
-    st.markdown("---")
-    st.markdown("**Key kaise leni hai?**")
-    st.link_button("Get API Key", "https://aistudio.google.com/app/apikey")
-    st.caption("Copy icon 📋 se puri key copy karo, space nahi hona chahiye.")
+st.markdown('<div class="bull-block">🐂</div>', unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center;'>TAURIC x GEMINI PRO</h2>", unsafe_allow_html=True)
 
-# --- HEADER ---
-st.markdown("""
-<div class="header">
-    <h1 style="color:#ff1493 !important; margin:0;">🐂 TAURIC x GEMINI PRO</h1>
-    <p style="margin:5px 0 0 0; font-weight:600;">Real 4-AI Council - Live Trading Signals</p>
-</div>
-""", unsafe_allow_html=True)
+symbol = st.radio("Pair:", ["BTC-USD", "EURUSD=X", "GBPUSD=X", "GC=F (Gold)", "SI=F (Silver)"], horizontal=True)
 
-# --- PAIR SELECT ---
-col1, col2 = st.columns([2, 1])
-with col1:
-    symbol = st.selectbox("Pair Select Karo:", ["BTC-USD", "EURUSD=X", "GBPUSD=X", "GC=F (Gold)", "SI=F (Silver)"], index=0)
-with col2:
-    st.write("")
-    st.write("")
-    refresh = st.button("🔄 Refresh Price")
-
-# --- LIVE PRICE ---
-def get_live_price(sym):
+def get_price():
     try:
-        if "BTC" in sym:
-            r = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=5).json()
-            return float(r['data']['amount']), "Coinbase Live"
-    except: pass
-    return 83615.46, "Simulated (API busy)"
+        r = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=5).json()
+        return float(r['data']['amount'])
+    except:
+        return 83615.0
 
-price, source = get_live_price(symbol)
+price = get_price()
+st.markdown(f'<div class="price-card"><b>{symbol} LIVE</b><br><span style="font-size:28px; font-weight:800; color:#ff1493 !important;">${price:,.2f}</span><br><small>{datetime.now().strftime("%H:%M:%S")}</small></div>', unsafe_allow_html=True)
 
-st.markdown(f"""
-<div class="price-card">
-    <div style="font-size:14px; color:#888 !important;">{symbol} | {source} | {datetime.now().strftime('%H:%M:%S')}</div>
-    <div style="font-size:32px; font-weight:800; color:#ff1493 !important;">${price:,.2f}</div>
+# 5 AI DISPLAY
+st.markdown("""
+<div class="agent-row">
+    <div class="block">📈</div>
+    <div class="agent-text"><b>Trade Scout:</b><br><span>Finds the best possible<br>trade setup.</span></div>
+</div>
+<div class="agent-row right">
+    <div class="agent-text" style="text-align:right;"><b>News Analyst:</b><br><span>Checks news and market<br>sentiment before entry.</span></div>
+    <div class="block">📊</div>
+</div>
+<div class="agent-row">
+    <div class="block">🏛️</div>
+    <div class="agent-text"><b>Market Analyst:</b><br><span>Analyzes volume, indicators,<br>and market strength.</span></div>
+</div>
+<div class="agent-row right">
+    <div class="agent-text" style="text-align:right;"><b>Validator:</b><br><span>Rechecks the research<br>and validates the setup.</span></div>
+    <div class="block">🕯️</div>
+</div>
+<div class="agent-row">
+    <div class="block">💹</div>
+    <div class="agent-text"><b>Profit Checker:</b><br><span>Confirms whether the<br>trade is worth taking.</span></div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- GEMINI CALL - LATEST MODELS ---
-def call_gemini(key, pair, live_price, role):
-    if not key:
-        return "Key dalo", "HOLD"
-    
-    # 2026 ke latest models ki list - ek fail ho to dusra chalega
+def call_gemini(role_detail, pair, live_price):
     models = ["gemini-2.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash-lite"]
-    prompt = f"You are a {role} expert trader. Analyze {pair} at live price {live_price}. Give ONLY: BUY or SELL or HOLD | reason in 8 words. No extra text."
+    prompt = f"You are {role_detail}. Pair {pair} price {live_price}. Reply strictly: BUY or SELL or HOLD | 10 word reason"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    
-    for model in models:
+    for m in models:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={GEMINI_API_KEY}"
             r = requests.post(url, json=payload, timeout=15)
-            data = r.json()
-            if "candidates" in data and data["candidates"]:
-                text = data['candidates'][0]['content']['parts'][0]['text']
-                upper = text.upper()
-                if "BUY" in upper: vote = "BUY"
-                elif "SELL" in upper: vote = "SELL"
-                else: vote = "HOLD"
-                return text, vote
+            d = r.json()
+            if "candidates" in d:
+                txt = d['candidates'][0]['content']['parts'][0]['text']
+                vote = "BUY" if "BUY" in txt.upper() else "SELL" if "SELL" in txt.upper() else "HOLD"
+                return txt, vote
         except:
             continue
-    return "Gemini thoda busy hai, dobara try karo", "HOLD"
+    return "AI busy, retry", "HOLD"
 
-# --- COUNCIL ---
-st.markdown("### 🔴 LIVE AI COUNCIL MEETING")
-generate = st.button("🚀 Naya Signal Generate Karo - Gemini Se", use_container_width=True, type="primary")
+st.markdown("---")
 
-if not api_key:
-    st.info("👈 Sidebar me apni AQ wali key dalo, phir signal ayega.")
+if not GEMINI_API_KEY:
+    st.warning("⚠️ Streamlit > Settings > Secrets me jaake GEMINI_API_KEY paste karo, phir Reboot karo.")
+    st.code('GEMINI_API_KEY = "AQAb8... tumhari puri key"')
 else:
-    if generate or True:
-        with st.spinner("4 AI Experts soch rahe hain... 5 second lagega"):
-            t1, v1 = call_gemini(api_key, symbol, price, "Technical Chart")
-            t2, v2 = call_gemini(api_key, symbol, price, "Global News")
-            t3, v3 = call_gemini(api_key, symbol, price, "Market Sentiment")
-            t4, v4 = call_gemini(api_key, symbol, price, "Risk Management")
+    if st.button("🚀 5-AI COUNCIL SE SIGNAL LO", use_container_width=True, type="primary"):
+        with st.spinner("5 AI soch rahe hain..."):
+            t1, v1 = call_gemini("Trade Scout - find best trade setup", symbol, price)
+            t2, v2 = call_gemini("News Analyst - check news sentiment", symbol, price)
+            t3, v3 = call_gemini("Market Analyst - analyze volume and indicators", symbol, price)
+            t4, v4 = call_gemini("Validator - recheck and validate setup", symbol, price)
+            t5, v5 = call_gemini("Profit Checker - confirm if trade worth taking", symbol, price)
 
-        # Display Cards
-        def card_class(v): return "buy" if v=="BUY" else "sell" if v=="SELL" else "hold"
+        st.markdown("### 🔴 LIVE COUNCIL RESULT")
+        st.info(f"📈 **Trade Scout [{v1}]**: {t1}")
+        st.info(f"📊 **News Analyst [{v2}]**: {t2}")
+        st.info(f"🏛️ **Market Analyst [{v3}]**: {t3}")
+        st.info(f"🕯️ **Validator [{v4}]**: {t4}")
+        st.info(f"💹 **Profit Checker [{v5}]**: {t5}")
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown(f"<div class='ai-card {card_class(v1)}'><b>📊 AI-1 TECHNICAL</b><br>Vote: <b>{v1}</b><br><small>{t1}</small></div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='ai-card {card_class(v3)}'><b>🧠 AI-3 SENTIMENT</b><br>Vote: <b>{v3}</b><br><small>{t3}</small></div>", unsafe_allow_html=True)
-        with c2:
-            st.markdown(f"<div class='ai-card {card_class(v2)}'><b>📰 AI-2 NEWS</b><br>Vote: <b>{v2}</b><br><small>{t2}</small></div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='ai-card {card_class(v4)}'><b>🛡️ AI-4 RISK</b><br>Vote: <b>{v4}</b><br><small>{t4}</small></div>", unsafe_allow_html=True)
-
-        # Final Verdict Logic
-        votes = [v1, v2, v3, v4]
-        buy_c = votes.count("BUY")
-        sell_c = votes.count("SELL")
+        votes = [v1,v2,v3,v4,v5]
+        final = "BUY" if votes.count("BUY")>=3 else "SELL" if votes.count("SELL")>=3 else "HOLD"
         
-        if buy_c >= 3: final = "BUY"
-        elif sell_c >= 3: final = "SELL"
-        elif buy_c == 2 and sell_c <=1: final = "BUY"
-        elif sell_c == 2 and buy_c <=1: final = "SELL"
-        else: final = "HOLD"
-
-        sl = price*0.985 if final=="BUY" else price*1.015 if final=="SELL" else price*0.99
-        tp = price*1.03 if final=="BUY" else price*0.97 if final=="SELL" else price*1.01
-        
-        final_class = "final-buy" if final=="BUY" else "final-sell" if final=="SELL" else "final-hold"
-        
-        st.markdown(f"""
-        <div class="{final_class}">
-            <h1 style="margin:0;">FINAL VERDICT: {final}</h1>
-            <p style="margin:10px 0 0 0;">Confidence: {max(buy_c, sell_c, 2)*25}% | {buy_c} BUY vs {sell_c} SELL</p>
-            <div style="margin-top:15px; background:rgba(255,255,255,0.2); padding:10px; border-radius:10px;">
-                Entry: ${price:,.2f} | SL: ${sl:,.2f} | TP: ${tp:,.2f} | R:R 1:2
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.caption("⚠️ Ye AI signal hai, financial advice nahi. Apni research zarur karo.")
-    
+        if final=="BUY":
+            st.success(f"## FINAL: {final} 🟢 | Entry ${price:,.2f} | SL ${price*0.985:,.2f} | TP ${price*1.03:,.2f}")
+        elif final=="SELL":
+            st.error(f"## FINAL: {final} 🔴 | Entry ${price:,.2f} | SL ${price*1.015:,.2f} | TP ${price*0.97:,.2f}")
+        else:
+            st.warning(f"## FINAL: {final} 🟡 | Wait")
