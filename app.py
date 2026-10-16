@@ -18,7 +18,7 @@ st.markdown('<div class="bull">🐂</div><h2 style="text-align:center;color:#00F
 
 col1, col2 = st.columns(2)
 with col1:
-    symbol = st.selectbox("Pair:", ["BTC-USD","EURUSD=X","GBPUSD=X","GC=F","SI=F"])
+    symbol = st.selectbox("Pair:", ["BTC-USD","EURUSD=X","GBPUSD=X","XAUUSD=X","SI=F"])
 with col2:
     tf = st.selectbox("Timeframe:", ["1m","5m","15m","1H","4H","1D"], index=2)
 
@@ -32,7 +32,7 @@ def get_price(s, inter):
         d=requests.get(url,headers={'User-Agent':'Mozilla'},timeout=7).json()
         return float(d['chart']['result'][0]['meta']['regularMarketPrice'])
     except:
-        return {"BTC-USD":83400,"EURUSD=X":1.0835,"GBPUSD=X":1.2730,"GC=F":4120.6,"SI=F":61.34}.get(s,83400)
+        return {"BTC-USD":83400,"EURUSD=X":1.0835,"GBPUSD=X":1.2730,"XAUUSD=X":4120.6,"SI=F":61.34}.get(s,83400)
 
 def calc_sl_tp(entry, dec, sym, timeframe):
     base = 0.015 if "BTC" in sym else 0.008 if "GC" in sym else 0.01 if "SI" in sym else 0.003
